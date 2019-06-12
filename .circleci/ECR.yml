@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS ECR Create new repository for MDCPSS
+
+Parameters:
+  Environment:
+    Type: String
+    Description: Name of the environment
+    AllowedPattern: '[-_a-zA-Z0-9]+'
+  RepoName:
+    Type: String
+    Description: Name of ECR repository
+    AllowedPattern: '[-_a-zA-Z0-9]+'
+
+
+Resources:
+  ECRMDCPSS:
+   Type: AWS::CloudFormation::Stack
+   Properties:
+     Parameters:
+       BuildImageIamArn: !GetAtt ECRMDCPSSUser.Arn
+       CustomRepositoryName: !Sub ${Environment}-${RepoName}
+     TemplateURL: https://s3.amazonaws.com/digops-stacks/version/5.0.5/ecs-ecr.template
+     TimeoutInMinutes: 15
+
+  ECRMDCPSSUser:
+    Type: AWS::IAM::User
+    Properties:
+        UserName: !Sub mdcpss-ECR-${Environment}
+        Policies:
+          - PolicyName: GetAuthorizationToken
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                Effect: 'Allow'
+                Action: 'ecr:GetAuthorizationToken'
+                Resource: '*'
